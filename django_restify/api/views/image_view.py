@@ -12,16 +12,14 @@ def image_save(base64_data, extension):
     # calculate the md5 hash of the image data
     image_hash = hashlib.md5(image_data).hexdigest()
 
+    image_obj = None
     try:
-        Image.objects.get(pk=image_hash)
+        image_obj = Image.objects.get(pk=image_hash)
     except Image.DoesNotExist:
-        Image.objects.create(h=image_hash, extension=extension, data=image_data)
-    return image_hash
-
-
-def image_delete(image_hash):
-    image = Image.objects.get(h=image_hash)
-    image.delete()
+        image_obj = Image.objects.create(
+            h=image_hash, extension=extension, data=image_data
+        )
+    return image_obj
 
 
 def image_view(request, image_hash):

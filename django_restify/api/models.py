@@ -12,6 +12,12 @@ class User(AbstractUser):
     avatar = models.TextField(null=True)
 
 
+class Image(models.Model):
+    h = models.CharField(primary_key=True, max_length=32)
+    extension = models.CharField(max_length=10)
+    data = models.BinaryField()
+
+
 class Property(models.Model):
     host = models.ForeignKey(
         User, related_name="properties", null=False, on_delete=models.CASCADE
@@ -21,7 +27,7 @@ class Property(models.Model):
     guest_capacity = models.PositiveIntegerField(null=False, default=0)
     availability = models.JSONField(null=False, default=list)  # list of objects
     amenities = models.JSONField(null=False, default=list)  # list of strings
-    images = models.JSONField(null=False, default=list)  # list of strings (image hashes)
+    images = models.ManyToManyField(Image, related_name="properties")
 
 
 class Reservation(models.Model):
@@ -63,9 +69,3 @@ class Notification(models.Model):
     is_cancel_req = models.BooleanField(default=False)
     is_cleared = models.BooleanField(default=False)
     content = models.TextField(default=None)
-
-
-class Image(models.Model):
-    h = models.CharField(primary_key=True, max_length=32)
-    extension = models.CharField(max_length=10)
-    data = models.BinaryField()

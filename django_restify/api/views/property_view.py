@@ -1,10 +1,12 @@
 from random import randrange
 from django.db.models import F, Q, Value, Min, DateField
 from django.db.models.functions import Cast
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.serializers import (
     ModelSerializer,
     PrimaryKeyRelatedField,
+    SerializerMethodField,
     IntegerField,
     CurrentUserDefault,
 )
@@ -21,6 +23,7 @@ class PropertySerializer(ModelSerializer):
     host_id = PrimaryKeyRelatedField(
         source="host.id", many=False, default=CurrentUserDefault(), read_only=True
     )
+    images = SerializerMethodField()
     rating = IntegerField(read_only=True)
 
     class Meta:
@@ -36,6 +39,9 @@ class PropertySerializer(ModelSerializer):
             "images",
             "rating",
         ]
+
+    def get_images(self, obj):
+        return [image.h for image in obj.images.all()]
 
 
 class PropertyPagination(PageNumberPagination):
@@ -57,7 +63,7 @@ class PropertyListCreateView(ListCreateAPIView):
         This view should return a list of all the purchases for
         the user as determined by the username portion of the URL.
         """
-        queryset = Property.objects.all()
+        queryset = Property.objects.order_by("id")
 
         # GET query parameters
 
@@ -98,17 +104,38 @@ class PropertyListCreateView(ListCreateAPIView):
 
     def perform_create(self, serializer):
         images = self.request.data.get("images", [])
-        image_hashes = []
-        for image_obj in images:
-            ext = image_obj.get("ext", None)
-            data = image_obj.get("data", None)
+        image_objs = []
+        for image in images:
+            ext = image.get("ext", None)
+            data = image.get("data", None)
             if ext and data:
-                imh = image_save(data, ext)
-                image_hashes.append(imh)
-        serializer.save(host=self.request.user, images=image_hashes)
+                image_obj = image_save(data, ext)
+                image_objs.append(image_obj)
+        serializer.save(host=self.request.user, images=image_objs)
 
 
 class PropertyRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     lookup_field = "id"
     queryset = Property.objects.all()
     serializer_class = PropertySerializer
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+
+        image_ops = self.request.data.get("image_ops", {})
+        delete_hashes = image_ops.get("delete", [])
+        add_images = image_ops.get("add", [])
+
+        for delete_hash in delete_hashes:
+            if delete_hash not in set(instance.images.values_list("h", flat=True)):
+                raise PermissionDenied(
+                    "Cannot delete image that does not belong to this property."
+                )
+            instance.images.get(h=delete_hash).delete()
+
+        for image_obj in add_images:
+            ext = image_obj.get("ext", None)
+            data = image_obj.get("data", None)
+            if ext and data:
+                image = image_save(data, ext)
+                instance.images.add(image)
