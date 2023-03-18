@@ -141,7 +141,7 @@
                 "delete": ["7f46165474d11ee5836777d85df2cdab"],
                 "add": [
                     {
-                        "filename": "opq.png",
+                        "ext": "png",
                         "data": "YYfK9AAAACXBIWXMAAC4jAAAuIwF4pT92AAEAAElEQ..."
                     }
                 ]
