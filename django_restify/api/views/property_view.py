@@ -14,6 +14,7 @@ from functools import reduce
 from operator import and_
 
 from ..models import Property
+from .image_view import image_save
 
 
 class PropertySerializer(ModelSerializer):
@@ -96,6 +97,12 @@ class PropertyListCreateView(ListCreateAPIView):
         return queryset
 
     def perform_create(self, serializer):
+        images = self.request.data.get("images", [])
+        for image_obj in images:
+            ext = image_obj.get("ext", None)
+            data = image_obj.get("data", None)
+            if ext and data:
+                image_save(data, ext)
         serializer.save(host=self.request.user)
 
 
