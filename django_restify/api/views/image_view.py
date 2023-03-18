@@ -13,8 +13,12 @@ def image_save(base64_data, extension):
     image_data = b64decode(base64_data)
     # Calculate the md5 hash of the image data
     image_hash = hashlib.md5(image_data).hexdigest()
-    # Save the image to the database
-    Image.objects.create(h=image_hash, extension=extension, data=image_data)
+
+    try:
+        Image.objects.get(pk=image_hash)
+    except Image.DoesNotExist:
+        # Save the image to the database
+        Image.objects.create(h=image_hash, extension=extension, data=image_data)
     # Return the md5 hash
     return image_hash
 
