@@ -44,7 +44,7 @@
 
         -   ...
 
-    -   #### `PUT`: create a new property
+    -   #### `POST`: create a new property
 
         **JSON Body**
 
@@ -120,7 +120,7 @@
         -   `401`: user not logged in
         -   `404`: nonexistent property ID
 
-    -   #### `POST`: update an existing property listing
+    -   #### `PATCH`: update an existing property listing
 
         **JSON Body**
 
@@ -137,7 +137,7 @@
                 }
             ],
             "amenities": ["WiFi", "Pool", "Air conditioning"],
-            "images": {
+            "image_ops": {
                 "delete": ["7f46165474d11ee5836777d85df2cdab"],
                 "add": [
                     {
@@ -253,7 +253,6 @@
         -   `403`: invalid values for from and to dates
         -   `404`: nonexistent property ID
 
-
 -   ### `/reservation/update/<id>/`
 
     -   #### `PUT`: Allows the host of a property to update the reservation status of pending reservations to 'Approved' or 'Denied.
@@ -273,6 +272,7 @@
         ```
 
         **Error Codes**
+
         -   `400`: incorrect parameters
         -   `401`: user not logged in
         -   `403`: user is not the host of the property that is trying to be reserved or the reservation has a non pending status
@@ -292,8 +292,9 @@
             "to": "2025-03-08"
         }
         ```
-        
+
         **Error Codes**
+
         -   `401`: user not logged in
         -   `403`: user does not have permission to cancel this reservation or has a non cancellable status
         -   `404`: nonexistent reservation ID
@@ -322,7 +323,6 @@
         -   `403`: user is not the host of the reservation property, or reservation has a non cancellable status
         -   `404`: nonexistent reservation ID
 
-
         Valid status changes for host:
 
         -   `Pending` -> `Approved` || `Denied`,
@@ -332,58 +332,56 @@
 
         -   `Pending` -> `Cancelled`
 
-
 ## 👍 Notifications
 
 -   ### `/notifications/`
 
     -   #### `GET`: return a list of all uncleared notifications for a user
 
-       The user is inferred from logged in user.
+    The user is inferred from logged in user.
 
-       **Response**
+    **Response**
 
-       ```json
-       [
-           {
-               "notification_id": 5874,
-               "user_id": 6113,
-               "reservation_id": 6000,
-               "created_at": "2025-03-01T20:43:20",
-               "is_read": false,
-               "is_cancel_req": false,
-               "is_cleared": false,
-               "content": "Hello"
-           }
-       ]
-       ```
+    ```json
+    [
+        {
+            "notification_id": 5874,
+            "user_id": 6113,
+            "reservation_id": 6000,
+            "created_at": "2025-03-01T20:43:20",
+            "is_read": false,
+            "is_cancel_req": false,
+            "is_cleared": false,
+            "content": "Hello"
+        }
+    ]
+    ```
 
 -   ### `/notifications/read/<id>/`
 
     -   #### `GET`: returns the notification with notifcation id and marks is_read and is_cleared to true
 
-       The user is inferred from logged in user.
+    The user is inferred from logged in user.
 
-       **Response**
+    **Response**
 
-       ```json
-       [
-           {
-               "notification_id": 5874,
-               "user_id": 6113,
-               "reservation_id": 6000,
-               "created_at": "2025-03-01T20:43:20",
-               "is_read": true,
-               "is_cancel_req": false,
-               "is_cleared": true,
-               "content": "Hello"
-           }
-       ]
-       ```
-        
+    ```json
+    [
+        {
+            "notification_id": 5874,
+            "user_id": 6113,
+            "reservation_id": 6000,
+            "created_at": "2025-03-01T20:43:20",
+            "is_read": true,
+            "is_cancel_req": false,
+            "is_cleared": true,
+            "content": "Hello"
+        }
+    ]
+    ```
 
-       **Error Codes**
+    **Error Codes**
 
-       -   `401`: user not logged in
-       -   `403`: user tries to access a notification of a different user or tries to read a notification that has already been cleared
-       -   `404`: nonexistent notification id
+    -   `401`: user not logged in
+    -   `403`: user tries to access a notification of a different user or tries to read a notification that has already been cleared
+    -   `404`: nonexistent notification id
