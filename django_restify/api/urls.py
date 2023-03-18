@@ -6,6 +6,10 @@ urlpatterns = [
     path("", views.HelloView.as_view(), name="hello"),
     # path("comment/", views.__.as_view(), name="comment"),
     path("image/<str:image_hash>", views.image_view, name="image_fetch"),
+    path("signup/", views.SignUpView.as_view(), name="signup"),
+    path("login/", TokenObtainPairView.as_view(), name="login"),
+    path("refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("user/profile/", views.ProfileView.as_view(), name="profile"),
     path("reservation/", views.ReservationListView.as_view(), name="reservation"),
     path(
         "reservation/create/<int:pk>/",

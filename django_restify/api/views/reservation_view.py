@@ -166,7 +166,7 @@ class ReservationCancelView(APIView):
         if reservation.status not in ('Pending', 'PE', 'AP', 'Approved'):
             return Response(
                 {'error': 'This reservation is not in a cancellable state.'},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_403_FORBIDDEN
             )
         
         if reservation.status == 'PE':
@@ -208,7 +208,8 @@ class ReservationHostCancelView(APIView):
         if reservation.status != 'AP' and reservation.status != 'PC':
             return Response(
                 {'error': 'This reservation is not in a cancellable state.'},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_403_FORBIDDEN
+
             )
         
         if  reservation.status == 'PC':

@@ -191,10 +191,10 @@
         **Query Params** (at least one must be specified)
 
         -   `guest_id`: user ID of the guest that initiated the reservation
-        -   `host_id`: user ID of the host that owns the property
-        -   `status`: one of `reservation_pending`, `reserved`, `reservation_denied`, `cancellation_pending`, `cancelled`, `cancellation_denied`, `expired`, `terminated`
-        -   `from`: start date on or before all returned reservations
-        -   `to`: end date on or after all returned reservations
+        -   `property_id`: propety ID of the property that the reservation is about
+        -   `status`: one of `Pending`, `Denied`, `Expired`, `Approved`, `Completed`, `Cancelled`, `Terminated`
+        -   `from_date`: start date on or before all returned reservations
+        -   `to_date`: end date on or after all returned reservations
 
         **Response**
 
@@ -203,14 +203,11 @@
             {
                 "reservation_id": 5874,
                 "guest_id": 6113,
-                "host_id": 9945,
-                "status": "reservation_pending",
+                "status": "Pending",
                 "property_id": 6532,
                 "guests": 2,
-                "duration": {
-                    "from": "March 3, 2025",
-                    "to": "March 28, 2025"
-                }
+                "from": "2025-03-05",
+                "to": "2025-03-08"
             }
         ]
         ```
@@ -219,24 +216,22 @@
 
         -   `400`: incorrect parameters
         -   `401`: user not logged in
-        -   `403`: user is not participant of any reservation (must either be guest or host)
 
-    -   #### `PUT`: create a new reservation request
+-   ### `/reservation/create/<id>/`
+
+    -   #### `POST`: create a new reservation request
 
         **JSON Body**
 
         ```json
         {
-            "property_id": 6532,
             "guests": 2,
-            "duration": {
-                "from": "March 3, 2025",
-                "to": "March 28, 2025"
-            }
+            "from": "2025-03-05",
+            "to": "2025-03-08"
         }
         ```
 
-        Guest ID inferred from logged in user. The default status is `pending`.
+        Guest ID inferred from logged in user. The default status is `pending`. Property ID is inferred from the URL
 
         **Response** (the entire saved reservation object)
 
@@ -244,25 +239,24 @@
         {
             "reservation_id": 5874,
             "guest_id": 6113,
-            "host_id": 9945,
-            "status": "reservation_pending",
+            "status": "Pending",
             "property_id": 6532,
             "guests": 2,
-            "duration": {
-                "from": "March 3, 2025",
-                "to": "March 28, 2025"
-            }
+            "from": "2025-03-05",
+            "to": "2025-03-08"
         }
         ```
 
         **Error Codes**
 
-        -   `400`: incorrect data format
         -   `401`: user not logged in
+        -   `403`: invalid values for from and to dates
+        -   `404`: nonexistent property ID
 
--   ### `/reservation/<id>/`
 
-    -   #### `GET`: return a specific reservation
+-   ### `/reservation/update/<id>/`
+
+    -   #### `PUT`: Allows the host of a property to update the reservation status of pending reservations to 'Approved' or 'Denied.
 
         **Response** (the entire saved reservation object)
 
@@ -270,52 +264,43 @@
         {
             "reservation_id": 5874,
             "guest_id": 6113,
-            "host_id": 9945,
-            "status": "reservation_pending",
+            "status": "Approved",
             "property_id": 6532,
             "guests": 2,
-            "duration": {
-                "from": "March 3, 2025",
-                "to": "March 28, 2025"
-            }
+            "from": "2025-03-05",
+            "to": "2025-03-08"
         }
         ```
 
         **Error Codes**
-
+        -   `400`: incorrect parameters
         -   `401`: user not logged in
-        -   `403`: user is not a participant of the reservation (must either be guest or host)
+        -   `403`: user is not the host of the property that is trying to be reserved or the reservation has a non pending status
         -   `404`: nonexistent reservation ID
 
-    -   #### `POST`: modify a specific reservation
+-   ### `/reservation/cancel/<id>/`
+
+    -   #### `GET`: Allows the user who initiated the reservation to cancel the reservation if status is pending or request cancellation using notification if status is approved.
 
         **JSON Body**
 
         ```json
         {
-            "status": "approved",
+            "status": "Cancelled",
             "guests": 2,
-            "duration": {
-                "from": "March 3, 2025",
-                "to": "March 28, 2025"
-            }
+            "from": "2025-03-05",
+            "to": "2025-03-08"
         }
         ```
+        
+        **Error Codes**
+        -   `401`: user not logged in
+        -   `403`: user does not have permission to cancel this reservation or has a non cancellable status
+        -   `404`: nonexistent reservation ID
 
-        Valid status changes for host:
+-   ### `/reservation/cancel/request/<id>/`
 
-        -   `reservation_pending` -> `reserved` || `reservation_denied`,
-        -   `cancellation_pending` -> `cancelled` || `cancellation_denied`,
-        -   `reserved` -> `terminated`
-
-        Valid status changes for guest:
-
-        -   `reservation_pending` -> `cancelled`
-        -   `reserved` -> `cancellation_pending`
-
-        Automatic status changes:
-
-        -   `reservation_pending` || `cancellation_pending` -> `expired`
+    -   #### `GET`: Allows the host of a property that is in the reservation process to cancel any reservation. If cancellation was first requested by user then status is cancelled otherwise status is terminated.
 
         **Response** (the entire updated reservation object)
 
@@ -323,20 +308,82 @@
         {
             "reservation_id": 5874,
             "guest_id": 6113,
-            "host_id": 9945,
-            "status": "pending",
+            "status": "Terminated",
             "property_id": 6532,
             "guests": 2,
-            "duration": {
-                "from": "March 3, 2025",
-                "to": "March 28, 2025"
-            }
+            "from": "2025-03-05",
+            "to": "2025-03-08"
         }
         ```
 
         **Error Codes**
 
-        -   `400`: incorrect data format
         -   `401`: user not logged in
-        -   `403`: user is not a participant of the reservation (must either be guest or host), or user status change not valid
+        -   `403`: user is not the host of the reservation property, or reservation has a non cancellable status
         -   `404`: nonexistent reservation ID
+
+
+        Valid status changes for host:
+
+        -   `Pending` -> `Approved` || `Denied`,
+        -   `Approved` -> `Terminated` || `Cancelled`
+
+        Valid status changes for guest:
+
+        -   `Pending` -> `Cancelled`
+
+
+## 👍 Notifications
+
+-   ### `/notifications/`
+
+    -   #### `GET`: return a list of all uncleared notifications for a user
+
+       The user is inferred from logged in user.
+
+       **Response**
+
+       ```json
+       [
+           {
+               "notification_id": 5874,
+               "user_id": 6113,
+               "reservation_id": 6000,
+               "created_at": "2025-03-01T20:43:20",
+               "is_read": false,
+               "is_cancel_req": false,
+               "is_cleared": false,
+               "content": "Hello"
+           }
+       ]
+       ```
+
+-   ### `/notifications/read/<id>/`
+
+    -   #### `GET`: returns the notification with notifcation id and marks is_read and is_cleared to true
+
+       The user is inferred from logged in user.
+
+       **Response**
+
+       ```json
+       [
+           {
+               "notification_id": 5874,
+               "user_id": 6113,
+               "reservation_id": 6000,
+               "created_at": "2025-03-01T20:43:20",
+               "is_read": true,
+               "is_cancel_req": false,
+               "is_cleared": true,
+               "content": "Hello"
+           }
+       ]
+       ```
+        
+
+       **Error Codes**
+
+       -   `401`: user not logged in
+       -   `403`: user tries to access a notification of a different user or tries to read a notification that has already been cleared
+       -   `404`: nonexistent notification id

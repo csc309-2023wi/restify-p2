@@ -47,7 +47,7 @@ class NotificationReadView(APIView):
         if notification.user != user:
             return Response(status=status.HTTP_403_FORBIDDEN)
         if notification.is_cleared:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(status=status.HTTP_403_FORBIDDEN)
         notification.is_read = True
         notification.is_cleared = True
         notification.save()
