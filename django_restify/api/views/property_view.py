@@ -98,12 +98,14 @@ class PropertyListCreateView(ListCreateAPIView):
 
     def perform_create(self, serializer):
         images = self.request.data.get("images", [])
+        image_hashes = []
         for image_obj in images:
             ext = image_obj.get("ext", None)
             data = image_obj.get("data", None)
             if ext and data:
-                image_save(data, ext)
-        serializer.save(host=self.request.user)
+                imh = image_save(data, ext)
+                image_hashes.append(imh)
+        serializer.save(host=self.request.user, images=image_hashes)
 
 
 class PropertyRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
