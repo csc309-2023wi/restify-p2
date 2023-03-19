@@ -50,6 +50,12 @@ class PropertyPagination(PageNumberPagination):
     max_page_size = 36
 
 
+class PropertyPagination(PageNumberPagination):
+    page_size = 9
+    page_size_query_param = "page_size"
+    max_page_size = 36
+
+
 class PropertyListCreateView(ListCreateAPIView):
     serializer_class = PropertySerializer
     pagination_class = PropertyPagination
