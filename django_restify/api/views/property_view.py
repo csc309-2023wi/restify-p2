@@ -1,6 +1,7 @@
 from random import randrange
 from datetime import datetime
-from django.db.models import F, Q, Value, Min, DateField
+from django.db.models import F, Func, Q, Value, Min, DateField, Case, When
+from django.db.models import IntegerField as DJInt
 from django.db.models.functions import Cast
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
@@ -51,26 +52,27 @@ class PropertySerializer(ModelSerializer):
         and that there are no overlapping periods.
         """
 
-        availability = value
-        if not isinstance(availability, list):
+        availabilities = value
+        if not isinstance(availabilities, list):
             raise ValidationError("Availability should be a list of JSON objects.")
 
         date_format = "%Y-%m-%d"
 
+        # sort availabilities
         avas_sorted = sorted(
-            availability,
+            availabilities,
             key=lambda avail: (
-                datetime.strptime(avail["from"], date_format),
-                datetime.strptime(avail["to"], date_format),
+                datetime.strptime(avail["from"], date_format).date(),
+                datetime.strptime(avail["to"], date_format).date(),
             ),
         )
 
         for i in range(len(avas_sorted) - 1):
             # convert date strings to datetime objects
-            from_date1 = datetime.strptime(avas_sorted[i]["from"], date_format)
-            to_date1 = datetime.strptime(avas_sorted[i]["to"], date_format)
-            from_date2 = datetime.strptime(avas_sorted[i + 1]["from"], date_format)
-            to_date2 = datetime.strptime(avas_sorted[i + 1]["to"], date_format)
+            from_date1 = datetime.strptime(avas_sorted[i]["from"], date_format).date()
+            to_date1 = datetime.strptime(avas_sorted[i]["to"], date_format).date()
+            from_date2 = datetime.strptime(avas_sorted[i + 1]["from"], date_format).date()
+            to_date2 = datetime.strptime(avas_sorted[i + 1]["to"], date_format).date()
 
             # ensure that "to" date is after or equal to "from" date
             if to_date1 < from_date1 or to_date2 < from_date2:
@@ -142,6 +144,38 @@ class PropertyListCreateView(ListCreateAPIView):
                 Cast(F("availability__0__from"), output_field=DateField())
             )
         )
+
+        # filter based on from and to dates
+        date_format = "%Y-%m-%d"
+        from_date = self.request.query_params.get("from")
+        to_date = self.request.query_params.get("to")
+        if from_date is not None:
+            from_date = datetime.strptime(from_date, date_format).date()
+            # annotate earliest to date
+            queryset = queryset.annotate(
+                earliest_to_date=Cast(F("availability__0__to"), output_field=DateField())
+            )
+            queryset = queryset.filter(earliest_to_date__gte=from_date)
+        if to_date is not None:
+            to_date = datetime.strptime(to_date, date_format).date()
+            # annotate 2nd/1st from date
+            queryset = queryset.annotate(
+                availability_len=Func(
+                    F("availability"),
+                    function="json_array_length",
+                    output_field=DJInt(),
+                )
+            )
+            queryset = queryset.annotate(
+                next_from_date=Case(
+                    When(
+                        availability_len__gte=2,
+                        then=Cast(F("availability__1__from"), output_field=DateField()),
+                    ),
+                    default=Cast(F("availability__0__from"), output_field=DateField()),
+                )
+            )
+            queryset = queryset.filter(next_from_date__lte=to_date)
 
         return queryset
 
