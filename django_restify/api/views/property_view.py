@@ -10,6 +10,7 @@ from rest_framework.serializers import (
     SerializerMethodField,
     IntegerField,
     CurrentUserDefault,
+    ValidationError,
 )
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import filters, permissions
@@ -43,6 +44,47 @@ class PropertySerializer(ModelSerializer):
 
     def get_images(self, obj):
         return [image.h for image in obj.images.all()]
+
+    def validate_availability(self, value):
+        """
+        Validate that each availability object has a valid 'from' and 'to' date,
+        and that there are no overlapping periods.
+        """
+
+        availability = value
+        if not isinstance(availability, list):
+            raise ValidationError("Availability should be a list of JSON objects.")
+
+        date_format = "%Y-%m-%d"
+
+        avas_sorted = sorted(
+            availability,
+            key=lambda avail: (
+                datetime.strptime(avail["from"], date_format),
+                datetime.strptime(avail["to"], date_format),
+            ),
+        )
+
+        for i in range(len(avas_sorted) - 1):
+            # convert date strings to datetime objects
+            from_date1 = datetime.strptime(avas_sorted[i]["from"], date_format)
+            to_date1 = datetime.strptime(avas_sorted[i]["to"], date_format)
+            from_date2 = datetime.strptime(avas_sorted[i + 1]["from"], date_format)
+            to_date2 = datetime.strptime(avas_sorted[i + 1]["to"], date_format)
+
+            # ensure that "to" date is after or equal to "from" date
+            if to_date1 < from_date1 or to_date2 < from_date2:
+                raise ValidationError(
+                    "Availability 'to' date must be on or after 'from' date."
+                )
+
+            # check that availabilities are sorted and there are no overlap
+            if from_date2 < to_date1:
+                raise ValidationError(
+                    "Availability periods must be sorted and cannot overlap."
+                )
+
+        return avas_sorted
 
 
 class PropertyPagination(PageNumberPagination):
@@ -114,16 +156,7 @@ class PropertyListCreateView(ListCreateAPIView):
                 image_obj = image_save(data, ext)
                 image_objs.append(image_obj)
 
-        # sort availabilities
-        availabilities_sorted = sorted(
-            self.request.data.get("availability", []),
-            key=lambda avail: datetime.strptime(avail["from"], "%Y-%m-%d"),
-        )
-        serializer.validated_data["availability"] = availabilities_sorted
-
-        serializer.save(
-            host=self.request.user, images=image_objs, availability=availabilities_sorted
-        )
+        serializer.save(host=self.request.user, images=image_objs)
 
 
 class PropertyRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
@@ -132,13 +165,7 @@ class PropertyRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     serializer_class = PropertySerializer
 
     def perform_update(self, serializer):
-        # sort availabilities
-        availabilities_sorted = sorted(
-            self.request.data.get("availability", []),
-            key=lambda avail: datetime.strptime(avail["from"], "%Y-%m-%d"),
-        )
-        serializer.validated_data["availability"] = availabilities_sorted
-        instance = serializer.save(availability=availabilities_sorted)
+        instance = serializer.save()
 
         image_ops = self.request.data.get("image_ops", {})
         delete_hashes = image_ops.get("delete", [])
