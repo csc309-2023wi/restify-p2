@@ -1,4 +1,5 @@
 from random import randrange
+from datetime import datetime
 from django.db.models import F, Q, Value, Min, DateField
 from django.db.models.functions import Cast
 from rest_framework.exceptions import PermissionDenied
@@ -103,6 +104,7 @@ class PropertyListCreateView(ListCreateAPIView):
         return queryset
 
     def perform_create(self, serializer):
+        # upload and save images
         images = self.request.data.get("images", [])
         image_objs = []
         for image in images:
@@ -111,7 +113,17 @@ class PropertyListCreateView(ListCreateAPIView):
             if ext and data:
                 image_obj = image_save(data, ext)
                 image_objs.append(image_obj)
-        serializer.save(host=self.request.user, images=image_objs)
+
+        # sort availabilities
+        availabilities_sorted = sorted(
+            self.request.data.get("availability", []),
+            key=lambda avail: datetime.strptime(avail["from"], "%Y-%m-%d"),
+        )
+        serializer.validated_data["availability"] = availabilities_sorted
+
+        serializer.save(
+            host=self.request.user, images=image_objs, availability=availabilities_sorted
+        )
 
 
 class PropertyRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
