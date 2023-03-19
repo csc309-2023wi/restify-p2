@@ -132,7 +132,13 @@ class PropertyRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     serializer_class = PropertySerializer
 
     def perform_update(self, serializer):
-        instance = serializer.save()
+        # sort availabilities
+        availabilities_sorted = sorted(
+            self.request.data.get("availability", []),
+            key=lambda avail: datetime.strptime(avail["from"], "%Y-%m-%d"),
+        )
+        serializer.validated_data["availability"] = availabilities_sorted
+        instance = serializer.save(availability=availabilities_sorted)
 
         image_ops = self.request.data.get("image_ops", {})
         delete_hashes = image_ops.get("delete", [])
