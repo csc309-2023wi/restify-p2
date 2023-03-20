@@ -93,7 +93,10 @@ class PropertyCommentListView(ListCreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
-
+        Notification.objects.create(
+            user_id = request.user,
+            property_id = property_commented,
+            content=f"{request.user.username} has commented on the property at {property_commented.address}.")
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def perform_create(self, serializer):
@@ -137,7 +140,7 @@ class UserCommentListView(ListCreateAPIView):
             )
 
         reservation = Reservation.objects.filter(
-            property__host=request.user, guest_id=user, status="CO"
+            property_id__host=request.user, guest_id=user, status="CO"
         )
         if not reservation:
             return Response(
