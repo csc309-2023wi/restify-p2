@@ -6,6 +6,7 @@
 -   [Error status codes](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status)
 
 ---
+
 ## 👍 Auth
 
 -   ### `/signup/`
@@ -26,6 +27,7 @@
             "avatar": "profile_pic.png"
         }
         ```
+
         -   `phone_number` and `avatar` are optional
 
         **Response**
@@ -38,10 +40,11 @@
             "email": "johndoe@gmail.com",
             "phone_number": 180012345678,
             "avatar": "profile_pic.png"
-        }            
+        }
         ```
 
         **Error Codes**
+
         -   `400`: missing or invalid request data
 
 -   ### `/login/`
@@ -63,10 +66,11 @@
         {
             "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ...",
             "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ..."
-        }            
+        }
         ```
 
         **Error Codes**
+
         -   `400`: missing or invalid request data
 
 -   ### `/refresh/`
@@ -118,12 +122,12 @@
         }
         ```
 
-         **Error Codes**
+        **Error Codes**
 
-        -   `401`:  user is not logged in
-    
-    -   #### `PUT`: update user field(s) 
-        
+        -   `401`: user is not logged in
+
+    -   #### `PUT`: update user field(s)
+
         **JSON Body**
 
         ```json
@@ -137,6 +141,7 @@
             "avatar": "profile_pic.png"
         }
         ```
+
         -   All fields are optional
 
         **Response**
@@ -152,10 +157,10 @@
         }
         ```
 
-         **Error Codes**
+        **Error Codes**
 
         -   `400`: invalid request data
-        -   `401`:  user is not logged in
+        -   `401`: user is not logged in
 
 ---
 
@@ -165,9 +170,18 @@
 
     -   #### `GET`: return a list of properties, default to all properties, but possibly limited by query parameters
 
-        **Query Params**
+        **Query Params** (all optional)
 
         -   `host_id`: user ID of the host that owns the property
+        -   `location`: address of the property
+        -   `num_guests`: number of guests that need to be accommodated
+        -   `amenities`: a comma-separated string of amenities
+        -   `from`: the earliest that the property needs to be available until
+        -   `to`: the latest that the property needs to be available since
+        -   `search`: a string to search through properties that match the keywords in "address", "description", and "amenities"
+        -   `ordering`: way to order, or sort the results; `[-]{rating|earliest_availability}`
+        -   `page_size`: number of properties to return per request
+        -   `page`: page number, or the set of properties to navigate to
 
         **Response**
 
@@ -204,23 +218,28 @@
         {
             "address": "123 Broadway, New York, NY, United States",
             "description": "Natus id molestias corporis minima quisquam. Tempora dolor consectetur officia sequi veniam. Nostrum necessitatibus voluptatem et et. Voluptate veritatis minima ipsam aperiam eos dolor sint vero.",
-            "guests_allowed": 3,
+            "guest_capacity": 3,
             "availability": [
                 {
-                    "from": "March 1, 2025",
-                    "to": "March 1, 2026",
-                    "price": 500.34
+                    "from": "2024-06-25",
+                    "to": "2025-05-31",
+                    "price": 123.45
+                },
+                {
+                    "from": "2023-05-25",
+                    "to": "2023-07-24",
+                    "price": 678.9
                 }
             ],
-            "amenities": ["WiFi", "Pool", "Air conditioning"],
+            "amenities": ["WiFi", "Pool"],
             "images": [
                 {
                     "ext": "png",
-                    "data": "iVBORw0KGgoAANSUhEAB4AAAAAC/kV7ZAAAAOXRFWHRTb..."
+                    "data": "iVBORw0KGgoAAAANSUhEUgAAABgAA..."
                 },
                 {
-                    "ext": "jpg",
-                    "data": "p1aS2M6tYsaJ++eUXtWzZ0uK+f/75R48++qhFvbXnLi4u..."
+                    "ext": "png",
+                    "data": "iVBORw0KGgoAAAANSUhEUgAAAFIAA..."
                 }
             ]
         }
@@ -411,7 +430,7 @@
 
         ```json
         {
-            "status": "AP",
+            "status": "AP"
         }
         ```
 
@@ -481,12 +500,11 @@
             "from_date": "2025-03-05",
             "to_date": "2025-03-08",
             "Message": "Reservation has been Terminated"
-            
         }
         ```
 
         **Error Codes**
-        
+
         -   `400`: Invalid value of cancel parameter has been specificed when dealing with a pending cancellation request
         -   `401`: user not logged in
         -   `403`: user is not the host of the reservation property, or reservation has a non cancellable status
@@ -508,7 +526,7 @@
 -   ### `/comment/property/id/`
 
     -   #### `GET`: return all the comments/ratings for property with property id
-        
+
         Supports pagination.
 
         **Response**
@@ -534,7 +552,7 @@
     -   #### `POST`: make a comment/rate the property with property id
 
         **JSON Body**
-        
+
         ```json
         {
             "content": "Wow!",
@@ -595,7 +613,7 @@
     -   #### `POST`: make a comment/rate the user with user id
 
         **JSON Body**
-        
+
         ```json
         {
             "content": "Wow!",
@@ -655,7 +673,7 @@
     -   #### `POST`: reply to a comment with comment id
 
         **JSON Body**
-        
+
         ```json
         {
             "content": "Wow!"
@@ -681,7 +699,7 @@
         -   `403`: does not meet criteria to leave a reply
         -   `404`: invalid comment id
 
-    ---
+    ***
 
 ## 👍 Notifications
 
