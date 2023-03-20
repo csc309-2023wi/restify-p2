@@ -8,6 +8,7 @@ from .models import (
     UserComment,
     Reply,
     Image,
+    Notification,
 )
 
 # Register your models here.
@@ -18,3 +19,4 @@ admin.site.register(PropertyComment)
 admin.site.register(UserComment)
 admin.site.register(Reply)
 admin.site.register(Image)
+admin.site.register(Notification)
