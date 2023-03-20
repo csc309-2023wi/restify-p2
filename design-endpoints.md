@@ -6,6 +6,158 @@
 -   [Error status codes](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status)
 
 ---
+## 👍 Auth
+
+-   ### `/signup/`
+
+    -   #### `POST`: create a new user
+
+        **JSON Body**
+
+        ```json
+        {
+            "username": "JohnD123",
+            "first_name": "John",
+            "last_name": "Doe",
+            "email": "johndoe@gmail.com",
+            "password": "pass123",
+            "password2": "pass123",
+            "phone_number": 180012345678,
+            "avatar": "profile_pic.png"
+        }
+        ```
+        -   `phone_number` and `avatar` are optional
+
+        **Response**
+
+        ```json
+        {
+            "username": "JohnD123",
+            "first_name": "John",
+            "last_name": "Doe",
+            "email": "johndoe@gmail.com",
+            "phone_number": 180012345678,
+            "avatar": "profile_pic.png"
+        }            
+        ```
+
+        **Error Codes**
+        -   `400`: missing or invalid request data
+
+-   ### `/login/`
+
+    -   #### `POST`: login user using JWT
+
+        **JSON Body**
+
+        ```json
+        {
+            "username": "JohnD123",
+            "password": "pass123"
+        }
+        ```
+
+        **Response**
+
+        ```json
+        {
+            "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ...",
+            "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ..."
+        }            
+        ```
+
+        **Error Codes**
+        -   `400`: missing or invalid request data
+
+-   ### `/refresh/`
+
+    -   #### `POST`: get a new refresh token
+
+        **JSON Body**
+
+        ```json
+        {
+            "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ..."
+        }
+        ```
+
+        -   `refresh` is a valid JWT refresh token
+
+        **Response**
+
+        ```json
+        {
+            "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ..."
+        }
+        ```
+
+        **Error Codes**
+
+        -   `400`: missing or invalid request data
+
+        -   `401`: invalid or expired token
+
+---
+
+## 👍 User
+
+-   ### `/user/profile`
+
+    -   #### `GET`: return the currently logged in user's profile information
+
+        **Response**
+
+        ```json
+        {
+            "username": "JohnD123",
+            "first_name": "John",
+            "last_name": "Doe",
+            "email": "johndoe@gmail.com",
+            "phone_number": 180012345678,
+            "avatar": "profile_pic.png"
+        }
+        ```
+
+         **Error Codes**
+
+        -   `401`:  user is not logged in
+    
+    -   #### `PUT`: update user field(s) 
+        
+        **JSON Body**
+
+        ```json
+        {
+            "username": "JohnD123",
+            "first_name": "John",
+            "last_name": "Doe",
+            "email": "johndoe@gmail.com",
+            "password": "pass123",
+            "phone_number": 180012345678,
+            "avatar": "profile_pic.png"
+        }
+        ```
+        -   All fields are optional
+
+        **Response**
+
+        ```json
+        {
+            "username": "JohnD123",
+            "first_name": "John",
+            "last_name": "Doe",
+            "email": "johndoe@gmail.com",
+            "phone_number": 180012345678,
+            "avatar": "profile_pic.png"
+        }
+        ```
+
+         **Error Codes**
+
+        -   `400`: invalid request data
+        -   `401`:  user is not logged in
+
+---
 
 ## 👍 Property
 
@@ -188,36 +340,33 @@
 
     -   #### `GET`: return a list of reservations, limited by query parameters
 
-        **Query Params** (at least one must be specified)
+        **Query Params** (type must be specified)
 
-        -   `guest_id`: user ID of the guest that initiated the reservation
-        -   `property_id`: propety ID of the property that the reservation is about
-        -   `status`: one of `Pending`, `Denied`, `Expired`, `Approved`, `Completed`, `Cancelled`, `Terminated`
-        -   `from_date`: start date on or before all returned reservations
-        -   `to_date`: end date on or after all returned reservations
+        -   `status`: one of `PE`, `DE`, `EX`, `AP`, `CA`, `TE`, `CO`, `PC`
+        -   `type`: one of `guest`, `host`
 
         **Response**
 
         ```json
         [
             {
-                "reservation_id": 5874,
+                "id": 5874,
                 "guest_id": 6113,
-                "status": "Pending",
                 "property_id": 6532,
-                "guests": 2,
-                "from": "2025-03-05",
-                "to": "2025-03-08"
+                "status": "PE",
+                "guest_count": 2,
+                "from_date": "2025-03-05",
+                "to_date": "2025-03-08"
             }
         ]
         ```
 
         **Error Codes**
 
-        -   `400`: incorrect parameters
+        -   `400`: If type query parameter is not present or is not valid
         -   `401`: user not logged in
 
--   ### `/reservation/create/<id>/`
+-   ### `/reservation/create/`
 
     -   #### `POST`: create a new reservation request
 
@@ -225,9 +374,10 @@
 
         ```json
         {
-            "guests": 2,
-            "from": "2025-03-05",
-            "to": "2025-03-08"
+            "property_id": 6532,
+            "guest_count": 2,
+            "from_date": "2025-03-05",
+            "to_date": "2025-03-08"
         }
         ```
 
@@ -237,13 +387,13 @@
 
         ```json
         {
-            "reservation_id": 5874,
+            "id": 5874,
             "guest_id": 6113,
-            "status": "Pending",
             "property_id": 6532,
-            "guests": 2,
-            "from": "2025-03-05",
-            "to": "2025-03-08"
+            "status": "PE",
+            "guest_count": 2,
+            "from_date": "2025-03-05",
+            "to_date": "2025-03-08"
         }
         ```
 
@@ -257,23 +407,31 @@
 
     -   #### `PUT`: Allows the host of a property to update the reservation status of pending reservations to 'Approved' or 'Denied.
 
+        **JSON Body**
+
+        ```json
+        {
+            "status": "AP",
+        }
+        ```
+
         **Response** (the entire saved reservation object)
 
         ```json
         {
-            "reservation_id": 5874,
+            "id": 5874,
             "guest_id": 6113,
-            "status": "Approved",
             "property_id": 6532,
-            "guests": 2,
-            "from": "2025-03-05",
-            "to": "2025-03-08"
+            "status": "AP",
+            "guest_count": 2,
+            "from_date": "2025-03-05",
+            "to_date": "2025-03-08"
         }
         ```
 
         **Error Codes**
 
-        -   `400`: incorrect parameters
+        -   `400`: incorrect value of status. Status can only be updated by the host to Approved or Denied
         -   `401`: user not logged in
         -   `403`: user is not the host of the property that is trying to be reserved or the reservation has a non pending status
         -   `404`: nonexistent reservation ID
@@ -282,14 +440,18 @@
 
     -   #### `GET`: Allows the user who initiated the reservation to cancel the reservation if status is pending or request cancellation using notification if status is approved.
 
-        **JSON Body**
+        **Response**
 
         ```json
         {
-            "status": "Cancelled",
-            "guests": 2,
-            "from": "2025-03-05",
-            "to": "2025-03-08"
+            "id": 5874,
+            "guest_id": 6113,
+            "property_id": 6532,
+            "status": "CA",
+            "guest_count": 2,
+            "from_date": "2025-03-05",
+            "to_date": "2025-03-08",
+            "Message": "Reservation has been cancelled"
         }
         ```
 
@@ -303,22 +465,29 @@
 
     -   #### `GET`: Allows the host of a property that is in the reservation process to cancel any reservation. If cancellation was first requested by user then status is cancelled otherwise status is terminated.
 
+        **Query Params**
+
+        -   `cancel`: one of `true` or `false`
+
         **Response** (the entire updated reservation object)
 
         ```json
         {
             "reservation_id": 5874,
             "guest_id": 6113,
-            "status": "Terminated",
+            "status": "TE",
             "property_id": 6532,
             "guests": 2,
-            "from": "2025-03-05",
-            "to": "2025-03-08"
+            "from_date": "2025-03-05",
+            "to_date": "2025-03-08",
+            "Message": "Reservation has been Terminated"
+            
         }
         ```
 
         **Error Codes**
-
+        
+        -   `400`: Invalid value of cancel parameter has been specificed when dealing with a pending cancellation request
         -   `401`: user not logged in
         -   `403`: user is not the host of the reservation property, or reservation has a non cancellable status
         -   `404`: nonexistent reservation ID
@@ -331,6 +500,188 @@
         Valid status changes for guest:
 
         -   `Pending` -> `Cancelled`
+
+---
+
+## 👍 Comment
+
+-   ### `/comment/property/id/`
+
+    -   #### `GET`: return all the comments/ratings for property with property id
+        
+        Supports pagination.
+
+        **Response**
+
+        ```json
+        [
+            {
+                "id": 1,
+                "commenter": 1,
+                "content": "Wow!",
+                "comment_for": 2,
+                "rating": 5,
+                "posted_at": "2023-03-19T01:49:40.841989Z"
+            }
+        ]
+        ```
+
+        **Error Codes**
+
+        -   `401`: user is not logged in
+        -   `404`: invalid property id
+
+    -   #### `POST`: make a comment/rate the property with property id
+
+        **JSON Body**
+        
+        ```json
+        {
+            "content": "Wow!",
+            "rating": 5
+        }
+        ```
+
+        -   Content is optional
+
+        -   Rating must be between 1 and 5
+
+        **Response**
+
+        ```json
+        {
+            "id": 1,
+            "commenter": 1,
+            "content": "Wow!",
+            "comment_for": 2,
+            "rating": 5,
+            "posted_at": "2023-03-19T01:49:40.841989Z"
+        }
+        ```
+
+        **Error Codes**
+
+        -   `400`: invalid request data
+        -   `401`: user is not logged in
+        -   `403`: does not meet criteria to leave a comment
+        -   `404`: invalid property id
+
+-   ### `/comment/user/id/`
+
+    -   #### `GET`: return all the comments/ratings for user with user id
+
+        Supports pagination.
+
+        **Response**
+
+        ```json
+        [
+            {
+                "id": 1,
+                "commenter": 1,
+                "content": "Wow!",
+                "comment_for": 2,
+                "rating": 5,
+                "posted_at": "2023-03-19T01:49:40.841989Z"
+            }
+        ]
+        ```
+
+        **Error Codes**
+
+        -   `401`: user is not logged in
+        -   `404`: invalid user id
+
+    -   #### `POST`: make a comment/rate the user with user id
+
+        **JSON Body**
+        
+        ```json
+        {
+            "content": "Wow!",
+            "rating": 5
+        }
+        ```
+
+        -   Content is optional
+
+        -   Rating must be between 1 and 5
+
+        **Response**
+
+        ```json
+        {
+            "id": 1,
+            "commenter": 1,
+            "content": "Wow!",
+            "comment_for": 2,
+            "rating": 5,
+            "posted_at": "2023-03-19T01:49:40.841989Z"
+        }
+        ```
+
+        **Error Codes**
+
+        -   `400`: invalid request data
+        -   `401`: user is not logged in
+        -   `403`: does not meet criteria to leave a comment
+        -   `404`: invalid user id
+
+-   ### `/comment/property/reply/id/`
+
+    -   #### `GET`: return all the replies for the comment with comment id
+
+        Supports pagination.
+
+        **Response**
+
+        ```json
+        [
+            {
+                "id": 1,
+                "commenter": 1,
+                "content": "Wow!",
+                "comment_for": 2,
+                "posted_at": "2023-03-19T01:49:40.841989Z"
+            }
+        ]
+        ```
+
+        **Error Codes**
+
+        -   `401`: user is not logged in
+        -   `404`: invalid comment id
+
+    -   #### `POST`: reply to a comment with comment id
+
+        **JSON Body**
+        
+        ```json
+        {
+            "content": "Wow!"
+        }
+        ```
+
+        **Response**
+
+        ```json
+        {
+            "id": 1,
+            "commenter": 1,
+            "content": "Wow!",
+            "comment_for": 2,
+            "posted_at": "2023-03-19T01:49:40.841989Z"
+        }
+        ```
+
+        **Error Codes**
+
+        -   `400`: invalid request data
+        -   `401`: user is not logged in
+        -   `403`: does not meet criteria to leave a reply
+        -   `404`: invalid comment id
+
+    ---
 
 ## 👍 Notifications
 
@@ -348,6 +699,7 @@
             "notification_id": 5874,
             "user_id": 6113,
             "reservation_id": 6000,
+            "property_id": 5400,
             "created_at": "2025-03-01T20:43:20",
             "is_read": false,
             "is_cancel_req": false,
@@ -371,6 +723,7 @@
             "notification_id": 5874,
             "user_id": 6113,
             "reservation_id": 6000,
+            "property_id": 5400,
             "created_at": "2025-03-01T20:43:20",
             "is_read": true,
             "is_cancel_req": false,
