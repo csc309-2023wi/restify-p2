@@ -196,6 +196,7 @@ class PropertyRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     lookup_field = "id"
     queryset = Property.objects.all()
     serializer_class = PropertySerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def perform_update(self, serializer):
         instance = serializer.save()

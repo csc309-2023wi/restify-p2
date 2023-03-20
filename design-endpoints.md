@@ -186,29 +186,56 @@
         **Response**
 
         ```json
-        [
-            {
-                "property_id": 6532,
-                "host_id": 9236,
-                "address": "123 Broadway, New York, NY, United States",
-                "description": "Natus id molestias corporis minima quisquam. Tempora dolor consectetur officia sequi veniam. Nostrum necessitatibus voluptatem et et. Voluptate veritatis minima ipsam aperiam eos dolor sint vero.",
-                "guests_allowed": 3,
-                "availability": [
-                    {
-                        "from": "March 1, 2025",
-                        "to": "March 1, 2026",
-                        "price": 500.34
-                    }
-                ],
-                "amenities": ["WiFi", "Pool", "Air conditioning"],
-                "images": ["7f46165474d11ee5836777d85df2cdab", "a4b46da106e59f424a2310cb7766366e"]
-            }
-        ]
+        {
+            "count": 3,
+            "next": "http://127.0.0.1:8000/api/property/?page=2&page_size=2",
+            "previous": null,
+            "results": [
+                {
+                    "id": 1,
+                    "host_id": 1,
+                    "address": "123 Broadway",
+                    "description": "Blah Blah",
+                    "guest_capacity": 3,
+                    "availability": [
+                        {
+                            "from": "2025-03-01",
+                            "price": 500.34,
+                            "to": "2026-03-01"
+                        }
+                    ],
+                    "amenities": ["WiFi", "Pool", "Air conditioning"],
+                    "images": ["a7ca66e6b4981d1189a926552494f757", "dc97cd047c1f4dcdecc93a48c69854ed"],
+                    "rating": 4
+                },
+                {
+                    "id": 3,
+                    "host_id": 1,
+                    "address": "456 Narrowalley",
+                    "description": "Beep boop",
+                    "guest_capacity": 5,
+                    "availability": [
+                        {
+                            "from": "2025-03-15",
+                            "price": 450.0,
+                            "to": "2025-04-26"
+                        },
+                        {
+                            "from": "2025-11-01",
+                            "price": 650.25,
+                            "to": "2026-02-05"
+                        }
+                    ],
+                    "amenities": ["WiFi", "Pool", "Air conditioning", "En-suite Laundry"],
+                    "images": [],
+                    "rating": 6
+                }
+            ]
+        }
         ```
 
         **Error Codes**
-
-        -   ...
+        None. If the query parameters are incorrect, then no results will be returned.
 
     -   #### `POST`: create a new property
 
@@ -259,7 +286,7 @@
         **Error Codes**
 
         -   `400`: required fields missing or incorrect data format
-        -   `401`: user not logged in
+        -   `401`: user not logged in (for POST only)
 
 -   ### `/property/<id>/`
 
@@ -269,20 +296,25 @@
 
         ```json
         {
-            "property_id": 6532,
-            "host_id": 9236,
-            "address": "123 Broadway, New York, NY, United States",
-            "description": "Natus id molestias corporis minima quisquam. Tempora dolor consectetur officia sequi veniam. Nostrum necessitatibus voluptatem et et. Voluptate veritatis minima ipsam aperiam eos dolor sint vero.",
-            "guests_allowed": 3,
+            "id": 7,
+            "host_id": 1,
+            "address": "098 Clown Town",
+            "description": "Freakshow. Totally.",
+            "guest_capacity": 1,
             "availability": [
                 {
-                    "from": "March 1, 2025",
-                    "to": "March 1, 2026",
-                    "price": 500.34
+                    "from": "2024-09-14",
+                    "to": "2024-09-30",
+                    "price": 123.45
+                },
+                {
+                    "from": "2024-10-31",
+                    "to": "2024-11-19",
+                    "price": 123.45
                 }
             ],
-            "amenities": ["WiFi", "Pool", "Air conditioning"],
-            "images": ["7f46165474d11ee5836777d85df2cdab", "a4b46da106e59f424a2310cb7766366e"]
+            "amenities": ["WiFi", "Pool"],
+            "images": ["a7ca66e6b4981d1189a926552494f757", "dc97cd047c1f4dcdecc93a48c69854ed"]
         }
         ```
 
@@ -294,26 +326,17 @@
     -   #### `PATCH`: update an existing property listing
 
         **JSON Body**
+        Can modify any existing fields, all optional.
+        `images` cannot be updated directly, and require the following special syntax, where image hashes are supplied in the "delete" array for deletion, and each image to be added in specified in the "add" array.
 
         ```json
         {
-            "address": "123 Broadway, New York, NY, United States",
-            "description": "Natus id molestias corporis minima quisquam. Tempora dolor consectetur officia sequi veniam. Nostrum necessitatibus voluptatem et et. Voluptate veritatis minima ipsam aperiam eos dolor sint vero.",
-            "guests_allowed": 3,
-            "availability": [
-                {
-                    "from": "March 1, 2025",
-                    "to": "March 1, 2026",
-                    "price": 500.34
-                }
-            ],
-            "amenities": ["WiFi", "Pool", "Air conditioning"],
             "image_ops": {
-                "delete": ["7f46165474d11ee5836777d85df2cdab"],
+                "delete": ["a7ca66e6b4981d1189a926552494f757"],
                 "add": [
                     {
                         "ext": "png",
-                        "data": "YYfK9AAAACXBIWXMAAC4jAAAuIwF4pT92AAEAAElEQ..."
+                        "data": "iVBORw0KGgoAAAANSUhEUgAAAFIAA..."
                     }
                 ]
             }
@@ -328,6 +351,12 @@
         -   `404`: nonexistent property ID
 
     -   #### `DELETE` delete a specific property
+
+        **Error Codes**
+
+        -   `401`: user not logged in
+        -   `403`: user is not the owner of property
+        -   `404`: nonexistent property ID
 
 ---
 
