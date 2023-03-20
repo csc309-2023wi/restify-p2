@@ -1,8 +1,8 @@
 from random import randrange
 from datetime import datetime
-from django.db.models import F, Func, Q, Value, Min, DateField, Case, When
+from django.db.models import F, Func, Q, Value, Min, DateField
 from django.db.models import IntegerField as DJInt
-from django.db.models.functions import Cast
+from django.db.models.functions import Cast, Concat
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.serializers import (
@@ -150,15 +150,8 @@ class PropertyListCreateView(ListCreateAPIView):
         from_date = self.request.query_params.get("from")
         to_date = self.request.query_params.get("to")
         if from_date is not None:
+            # ensure that the latest to date >= the requested from date
             from_date = datetime.strptime(from_date, date_format).date()
-            # annotate earliest to date
-            queryset = queryset.annotate(
-                earliest_to_date=Cast(F("availability__0__to"), output_field=DateField())
-            )
-            queryset = queryset.filter(earliest_to_date__gte=from_date)
-        if to_date is not None:
-            to_date = datetime.strptime(to_date, date_format).date()
-            # annotate 2nd/1st from date
             queryset = queryset.annotate(
                 availability_len=Func(
                     F("availability"),
@@ -167,15 +160,21 @@ class PropertyListCreateView(ListCreateAPIView):
                 )
             )
             queryset = queryset.annotate(
-                next_from_date=Case(
-                    When(
-                        availability_len__gte=2,
-                        then=Cast(F("availability__1__from"), output_field=DateField()),
+                latest_to_date=Func(
+                    F("availability"),
+                    Concat(
+                        Value("$["), F("availability_len") - 1, Value("]"), Value(".to")
                     ),
-                    default=Cast(F("availability__0__from"), output_field=DateField()),
+                    function="json_extract",
+                    output_field=DateField(),
                 )
             )
-            queryset = queryset.filter(next_from_date__lte=to_date)
+            queryset = queryset.filter(latest_to_date__gte=from_date)
+
+        if to_date is not None:
+            # ensure that the earliest from date <= the requested to date
+            to_date = datetime.strptime(to_date, date_format).date()
+            queryset = queryset.filter(earliest_availability__lte=to_date)
 
         return queryset
 
