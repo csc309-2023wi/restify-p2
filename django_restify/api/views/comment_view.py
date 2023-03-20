@@ -6,33 +6,18 @@ from rest_framework.generics import (
 )
 from rest_framework.response import Response
 from rest_framework import status
-from django.shortcuts import get_object_or_404
-from rest_framework.serializers import (
-    ModelSerializer,
-)
-from rest_framework import permissions
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from ..models import (
-    User,
-    Comment,
-    PropertyComment,
-    UserComment,
-    Reply,
-    Property,
-    Reservation,
-    Notification,
-)
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.serializers import (
     ModelSerializer,
     PrimaryKeyRelatedField,
-    IntegerField,
-    CurrentUserDefault,
     Serializer,
     CharField,
-    DateTimeField,
 )
+from django.shortcuts import get_object_or_404
 from django.db.models import Q
+
+from ..models import User, PropertyComment, UserComment, Reply, Property, Reservation
 
 
 class CommentSerializer(Serializer):
@@ -98,7 +83,7 @@ class PropertyCommentListView(ListCreateAPIView):
             )
 
         reservation = Reservation.objects.filter(
-            property=property_commented, guest=request.user
+            property_id=property_commented, guest_id=request.user
         ).filter(Q(status="CO") | Q(status="TE"))
         if not reservation:
             return Response(
@@ -125,13 +110,11 @@ class UserCommentListView(ListCreateAPIView):
         user = get_object_or_404(User, pk=self.kwargs["pk"])
         reservations = Reservation.objects.filter(
             Q(status="PE") | Q(status="AP") | Q(status="TE") | Q(status="CO"),
-            guest=user,
+            guest_id=user,
         )
         if not reservations:
             return Response(
-                {
-                    "error": "You do not have permission to view comments about this user"
-                },
+                {"error": "You do not have permission to view comments about this user"},
                 status=status.HTTP_403_FORBIDDEN,
             )
         return super().get(request, *args, **kwargs)
@@ -154,7 +137,7 @@ class UserCommentListView(ListCreateAPIView):
             )
 
         reservation = Reservation.objects.filter(
-            property__host=request.user, guest=user, status="CO"
+            property__host=request.user, guest_id=user, status="CO"
         )
         if not reservation:
             return Response(

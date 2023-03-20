@@ -85,7 +85,9 @@ class Comment(models.Model):
 
 
 class PropertyComment(Comment):
-    comment_for = models.ForeignKey(Property, on_delete=models.CASCADE)
+    comment_for = models.ForeignKey(
+        Property, related_name="reviews", on_delete=models.CASCADE
+    )
     rating = models.IntegerField(
         null=False, default=1, validators=[MaxValueValidator(5), MinValueValidator(1)]
     )

@@ -1,6 +1,6 @@
 from random import randrange
 from datetime import datetime
-from django.db.models import F, Func, Q, Value, Min, DateField
+from django.db.models import F, Func, Q, Value, Min, DateField, Avg
 from django.db.models import IntegerField as DJInt
 from django.db.models.functions import Cast, Concat
 from rest_framework.exceptions import PermissionDenied
@@ -136,7 +136,7 @@ class PropertyListCreateView(ListCreateAPIView):
             )
 
         # annotate rating
-        queryset = queryset.annotate(rating=F("id") + Value(randrange(1, 6)))
+        queryset = queryset.annotate(rating=Avg("reviews__rating"))
 
         # annotate earliest start date
         queryset = queryset.annotate(
