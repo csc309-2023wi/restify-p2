@@ -362,7 +362,7 @@
 
 ## 👍 Image
 
--   ### `/images/<hash>`
+-   ### `/image/<hash>`
 
     -   #### `GET`: fetch an image, encoded with the specified parameters
 
